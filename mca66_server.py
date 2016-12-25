@@ -2,7 +2,7 @@
 
 from __future__ import print_function
 
-import web, mca66, sys
+import web, mca66, sys, json
 # Open the serial port to communicate with the MCA-66
 # Exit if it fails.
 
@@ -20,7 +20,7 @@ if audio.open() is False:
 
 # define list of commands we handle
 commands = ['allon','alloff','pwr','volup','voldwn','setvol','setinput','togglemute',
-            'status']
+            'status','getzonelabels']
             
 
 urls = (
@@ -89,12 +89,14 @@ class controller:
                         audio.queryZone(zone)
                     else:
                         print("Error.")
+                elif command == "getzonelabels":
+                    return json.dumps(audio.getZoneNames())
             else:
                 print("Invalid command specified:", command)
         else:
             print("No command specified")
              
-        return audio.status()
+        return json.dumps(audio.status())
     
     def POST(self):
         user_data = web.input()

@@ -1,16 +1,16 @@
 from __future__ import absolute_import, division, print_function
-import serial, json, time
-
-input_names=['AirPlay','TV','ChromeCast','Source 4','Source 5','Source 6']
+import serial, time
 
 class MCA66:
     
     def __init__(self, device, to=1):
         print("Init...")
+        lines = filter(None, (line.strip() for line in open("zones_list.txt")))
+        self.zone_names = {int(a): b for a,b in [line.split(':') for line in lines]}
+        self.input_names = filter(None, (line.strip() for line in open("sources_list.txt")))
         self.device = device
         self.to = 1
         self.zonelist = {k+1:{'power':None,'input':None,'vol':None,'mute':None,'input_name':None} for k in range(6)}
-        
     def __enter__(self):
         print("Enter...")
         self.open()
@@ -19,6 +19,9 @@ class MCA66:
     def __exit__(self ,type, value, traceback):
         print("Exit...")
         self.ser.close()
+        
+    def getZoneNames(self):
+        return self.zone_names
 
     def open(self):
         self.ser = serial.Serial(port=self.device, baudrate = 38400, timeout=self.to)
@@ -59,7 +62,7 @@ class MCA66:
         zone = message[2]
         self.zonelist[zone]['power'] = "on" if (message[4] & 1<<7)>>7 else "off"
         self.zonelist[zone]['input'] = message[8]+1
-        self.zonelist[zone]['input_name'] = input_names[message[8]]
+        self.zonelist[zone]['input_name'] = self.input_names[message[8]]
         self.zonelist[zone]['vol'] = message[9]-195 if message[9] else 0
         self.zonelist[zone]['mute'] = "on" if (message[4] & 1<<6)>>6 else "off"
     
@@ -147,8 +150,7 @@ class MCA66:
             print("Invalid Zone")
             return    
         cmd = bytearray([0x02,0x00,zone,0x04,0x22])
-        self.send_command(cmd)
-    
+        self.send_command(cmd)    
 
     def queryZone(self, zone):
         if zone not in range(1,7):
@@ -177,4 +179,4 @@ class MCA66:
         self.get_reply() 
 
     def status(self):
-        return json.dumps(self.zonelist)
+        return self.zonelist

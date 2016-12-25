@@ -1,0 +1,8 @@
+1:FamRoom Speakers
+2:Kitchen Speakers
+3:LivingRoom Speakers
+4:Office Speakers
+5:Bedroom Speakers
+6:Patio Speakers
+
+

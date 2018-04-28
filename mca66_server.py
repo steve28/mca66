@@ -19,8 +19,8 @@ if audio.open() is False:
     sys.exit()
 
 # define list of commands we handle
-commands = ['allon','alloff','pwr','volup','voldwn','setvol','setinput','togglemute',
-            'status','getzonelabels']
+post_commands = ['allon','alloff','pwr','volup','voldwn','setvol','setinput','togglemute']
+get_commands = ['status','getzonelabels']
             
 
 urls = (
@@ -43,7 +43,34 @@ class controller:
         # do some input validation
         if 'command' in user_data:
             command = user_data.command.lower()
-            if command in commands: 
+            if command in get_commands: 
+                print("Processing...",command)
+                zone = int(user_data.zone) if 'zone' in user_data else None
+                            
+                # Process the commnads
+                if command == "status":
+                    if zone:
+                        audio.queryZone(zone)
+                    else:
+                        print("Error.")
+                elif command == "getzonelabels":
+                    return json.dumps(audio.getZoneNames())
+            else:
+                print("Invalid command specified:", command)
+        else:
+            print("No command specified")
+             
+        return json.dumps(audio.status())
+    
+    def POST(self):
+        # Grab the arguements from the URL
+        user_data = web.input()
+        # we're going to return JSON
+        web.header('Content-Type', 'application/json')
+        
+        if 'command' in user_data:
+            command = user_data.command.lower()
+            if command in post_commands: 
                 print("Processing...",command)
                 zone = int(user_data.zone) if 'zone' in user_data else None
                 value = int(user_data.value) if 'value' in user_data else None
@@ -84,23 +111,12 @@ class controller:
                         audio.toggleMute(zone)
                     else:
                         print("Error.")
-                elif command == "status":
-                    if zone:
-                        audio.queryZone(zone)
-                    else:
-                        print("Error.")
-                elif command == "getzonelabels":
-                    return json.dumps(audio.getZoneNames())
             else:
                 print("Invalid command specified:", command)
         else:
             print("No command specified")
              
         return json.dumps(audio.status())
-    
-    def POST(self):
-        user_data = web.input()
-        return user_data
 
 if __name__ == "__main__":
 

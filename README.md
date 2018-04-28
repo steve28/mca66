@@ -1,5 +1,5 @@
 # mca66
-This is the serial controller that implements a REST API for the Home Theater Direct MCA-66 Home Audi distribution amplifier. 
+This is the serial controller that implements a REST API for the Home Theater Direct MCA-66 Home Audio distribution amplifier. 
 
 # Files
 * zone_list.txt: This file is a text file containing the list of zone names

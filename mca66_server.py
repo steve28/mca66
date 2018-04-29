@@ -6,16 +6,14 @@ import web, mca66, sys, json
 # Open the serial port to communicate with the MCA-66
 # Exit if it fails.
 
-# Deafults
-logfile = open('/tmp/mca66_server.log','w',0)
+# Defults
+logfile = open('/var/log/mca66_server/server.log','w',0)
 sys.stdout = logfile
 sys.stderr = logfile
-    
-
-
 
 audio = mca66.MCA66('/dev/ttyUSB0')
 if audio.open() is False:
+    print("False!!")
     sys.exit()
 
 # define list of commands we handle
@@ -35,10 +33,12 @@ class index:
 class controller:
 
     def GET(self):
+        print("Received GET")
         # we're going to return JSON
         web.header('Content-Type', 'application/json')
         # Grab the arguements from the URL
         user_data = web.input()
+        print("user_data:",user_data)
         #print user_data, commands
         # do some input validation
         if 'command' in user_data:
@@ -46,7 +46,7 @@ class controller:
             if command in get_commands: 
                 print("Processing...",command)
                 zone = int(user_data.zone) if 'zone' in user_data else None
-                            
+                
                 # Process the commnads
                 if command == "status":
                     if zone:
@@ -68,6 +68,9 @@ class controller:
         # we're going to return JSON
         web.header('Content-Type', 'application/json')
         
+        print("Received POST")
+        print("user_data:",user_data)
+        print("data:", web.data())
         if 'command' in user_data:
             command = user_data.command.lower()
             if command in post_commands: 

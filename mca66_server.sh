@@ -6,17 +6,17 @@
 # Required-Stop:     $remote_fs $syslog
 # Default-Start:     2 3 4 5
 # Default-Stop:      0 1 6
-# Short-Description: Put a short description of the service here
-# Description:       Put a long description of the service here
+# Short-Description: MCA-66 Server
+# Description:       MCA-66 Server
 ### END INIT INFO
 
 # Change the next 3 lines to suit where you install your script and what you want to call it
-DIR=/usr/local/bin/myservice
+DIR=/usr/local/bin/mca66_server
 DAEMON=$DIR/mca66_server.py
 DAEMON_NAME=mca66_server
 
 # Add any command line options for your daemon here
-DAEMON_OPTS="-l"
+DAEMON_OPTS=""
 
 # This next line determines what user the script runs as.
 # Root generally not recommended but necessary if you are using the Raspberry Pi GPIO from Python.
@@ -29,7 +29,7 @@ PIDFILE=/var/run/$DAEMON_NAME.pid
 
 do_start () {
     log_daemon_msg "Starting system $DAEMON_NAME daemon"
-    start-stop-daemon --start --background --pidfile $PIDFILE --make-pidfile --user $DAEMON_USER --chuid $DAEMON_USER --startas $DAEMON -- $DAEMON_OPTS
+    start-stop-daemon --start --background --pidfile $PIDFILE --make-pidfile --user $DAEMON_USER --chuid $DAEMON_USER --chdir $DIR --startas $DAEMON -- $DAEMON_OPTS
     log_end_msg $?
 }
 do_stop () {

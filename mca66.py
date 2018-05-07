@@ -1,10 +1,10 @@
 from __future__ import absolute_import, division, print_function
-import serial, time
+import serial, time, logging
 
 class MCA66:
     
     def __init__(self, device, to=1):
-        print("Init...")
+        logging.debug("Init...")
         lines = filter(None, (line.strip() for line in open("zones_list.txt")))
         self.zone_names = {int(a): b for a,b in [line.split(':') for line in lines]}
         self.input_names = filter(None, (line.strip() for line in open("sources_list.txt")))
@@ -12,12 +12,12 @@ class MCA66:
         self.to = 1
         self.zonelist = {k+1:{'power':None,'input':None,'vol':None,'mute':None,'input_name':None} for k in range(6)}
     def __enter__(self):
-        print("Enter...")
+        logging.debug("Enter...")
         self.open()
         return self
         
     def __exit__(self ,type, value, traceback):
-        print("Exit...")
+        logging.debug("Exit...")
         self.ser.close()
         
     def getZoneNames(self):
@@ -37,10 +37,10 @@ class MCA66:
         self.ser.write(cmd)
         x=self.ser.read(13).decode("utf-8")
         if len(x)==13 and x=='Wangine_MCA66':
-            print('MCA-66 detected. Received:', str(x))
+            logging.debug('MCA-66 detected. Received: %s', str(x))
             return True
         else:
-            print("Could not communicate with MCA-66.")
+            logging.warning("Could not communicate with MCA-66.")
             return False
 
     def checksum(self, message):
@@ -51,12 +51,12 @@ class MCA66:
         return csb
     
     def printzone(self, zone):
-        print("Zone:", zone)
-        print("Power:", self.zonelist[zone]['power'])
-        print("Input:", self.zonelist[zone]['input'])
-        print("Input Name:", self.zonelist[zone]['input_name'])
-        print("Volume:",self.zonelist[zone]['vol'])
-        print("Mute:", self.zonelist[zone]['mute'])
+        logging.debug("Zone: %s", zone)
+        logging.debug("Power: %s", self.zonelist[zone]['power'])
+        logging.debug("Input: %s", self.zonelist[zone]['input'])
+        logging.debug("Input Name: %s", self.zonelist[zone]['input_name'])
+        logging.debug("Volume: %s",self.zonelist[zone]['vol'])
+        logging.debug("Mute: %s", self.zonelist[zone]['mute'])
 
     def parse_reply(self, message):
         zone = message[2]
@@ -80,16 +80,16 @@ class MCA66:
             #    continue
             if reply[3]!=0x05:
                 #print("*** Zone Status:", reply[2])
-                print("Other message:",hex(reply[3]))
+                logging.debug("Other message:",hex(reply[3]))
                 continue
             #print("*** Zone Status:", reply[2])
 
             if len(reply) != 14:
-                print("Full messasge not received.")
+                logging.debug("Full messasge not received.")
                 continue
  
             if ord(reply[-1:]) != self.checksum(reply[:-1]):
-                print("Message Failed checksum!")
+                logging.debug("Message Failed checksum!")
                 continue
 
             msg_count=msg_count+1
@@ -102,24 +102,24 @@ class MCA66:
    
     def setInput(self, zone, input):
         if zone not in range(1,7):
-            print("Invalid Zone")
+            logging.warning("Invalid Zone")
             return    
         if input not in range(1,7):
-            print("invalid input number")
+            logging.warning("invalid input number")
             return   
         cmd = bytearray([0x02,0x00,zone,0x04,input+2])
         self.send_command(cmd)
     
     def volUp(self, zone):
         if zone not in range(1,7):
-            print("Invalid Zone")
+            logging.warning("Invalid Zone")
             return    
         cmd = bytearray([0x02,0x00,zone,0x04,0x09])
         self.send_command(cmd)
 
     def volDwn(self, zone):
         if zone not in range(1,7):
-            print("Invalid Zone")
+            logging.warning("Invalid Zone")
             return    
         cmd = bytearray([0x02,0x00,zone,0x04,0x0A])
         self.send_command(cmd)
@@ -127,7 +127,7 @@ class MCA66:
     def setVol(self, zone, vol):
         #print(self.zonelist)
         if vol not in range(0,62):
-            print("Invald Volume")
+            logging.warning("Invald Volume")
             return
         #print("Requested:",vol)
         #print("Current:", self.zonelist[zone]['vol'])
@@ -147,24 +147,24 @@ class MCA66:
         
     def toggleMute(self, zone):
         if zone not in range(1,7):
-            print("Invalid Zone")
+            logging.warning("Invalid Zone")
             return    
         cmd = bytearray([0x02,0x00,zone,0x04,0x22])
         self.send_command(cmd)    
 
     def queryZone(self, zone):
         if zone not in range(1,7):
-            print("Invalid Zone")
+            logging.warning("Invalid Zone")
             return
         cmd = bytearray([0x02,0x00,zone,0x06,0x00])    
         self.send_command(cmd)
 
     def setPower(self, zone, pwr):
         if zone not in range(0,7):
-            print("Invalid Zone")
+            logging.warning("Invalid Zone")
             return    
         if pwr not in [0,1]:
-            print("invalid power command")
+            logging.warning("invalid power command")
             return
         if zone==0:
             cmd = bytearray([0x02,0x00,zone,0x04,0x38 if pwr else 0x39])
